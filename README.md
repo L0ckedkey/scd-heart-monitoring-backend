@@ -18,7 +18,7 @@ Pastikan sudah menginstal:
 
 - Python 3.12+
 - Docker & Docker Compose (untuk deployment)
-- Google Cloud Service Account (file JSON)
+- Google Cloud Service Account (file JSON, if Jservice account key is missing, generate using GCP cli)
 
 ---
 
