@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  flask-app:
+    build: .
+    image: backend-flask:latest 
+    container_name: backend-flask-app
+    ports:
+      - "4001:8003"
+    volumes:
+      - ./service-account-key.json:/app/service-account-key.json
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/service-account-key.json
+    env_file:
+      - .env
+    restart: unless-stopped
