@@ -47,7 +47,7 @@ def update_device_id_data(curr_data, cnx):
         device_id = curr_data["deviceId"]
 
         sql = text("""
-        UPDATE patient
+        UPDATE patients
         SET deviceId = :device_id
         WHERE patientID = :patient_id
         """)
