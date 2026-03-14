@@ -39,6 +39,8 @@ def register_patient_data(curr_data,cnx,key_list = ["email","password"]):
 #        cursor.close()
         return jsonify(resp_dict)
     
+from sqlalchemy import text
+
 def update_device_id_data(curr_data, cnx, key_list=["patientId","deviceId"]):
     try:
         status, data = validate_dict(curr_data, key_list)
@@ -61,13 +63,12 @@ def update_device_id_data(curr_data, cnx, key_list=["patientId","deviceId"]):
 
         sql = str(query)
 
-        result = cnx.execute(sql)
+        result = cnx.execute(text(sql))
         cnx.commit()
 
         resp_dict = {
             "status": "success",
             "message": "Device ID updated",
-            "patientId": patient_id,
             "rowsAffected": result.rowcount
         }
 
