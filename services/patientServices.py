@@ -39,6 +39,48 @@ def register_patient_data(curr_data,cnx,key_list = ["email","password"]):
 #        cursor.close()
         return jsonify(resp_dict)
     
+def update_device_id(curr_data, cnx, key_list=["patientId","deviceId"]):
+    try:
+        status, data = validate_dict(curr_data, key_list)
+    except:
+        return jsonify({"status": "error", "message": "Key Error!"})
+
+    if not status:
+        return jsonify({"status": "error", "message": "Invalid data"})
+
+    try:
+        patient_id = data["patientId"]
+        device_id = data["deviceId"]
+
+        patient = Table("patient")
+
+        query = (
+            Query.update(patient)
+            .set(patient.deviceId, device_id)
+            .where(patient.patientID == patient_id)
+        )
+
+        cursor = cnx.cursor()
+        cursor.execute(str(query))
+        cnx.commit()
+
+        resp_dict = {
+            "status": "success",
+            "message": "Device ID updated",
+            "patientId": patient_id
+        }
+
+    except Exception as e:
+        resp_dict = {
+            "status": "error",
+            "message": str(e)
+        }
+
+    finally:
+        cursor.close()
+
+    return jsonify(resp_dict)
+    
 def update_patient_data(curr_data,cnx,key_list=[]):
     try:
         status,_ = validate_dict(curr_data,key_list)

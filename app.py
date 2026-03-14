@@ -65,6 +65,10 @@ def test():
 def register_patient():
     return register_patient_data(request.get_json(), g.db_conn)
 
+@api_bp.route('/update-device-id', methods=['POST'])
+def update_device_id():
+    return update_device_id(request.get_json(), g.db_conn)
+
 @api_bp.route('/patient/additional-info', methods=['POST'])
 def update_patient():
     return update_patient_data(
