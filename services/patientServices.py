@@ -39,7 +39,7 @@ def register_patient_data(curr_data,cnx,key_list = ["email","password"]):
 #        cursor.close()
         return jsonify(resp_dict)
     
-def update_device_id(curr_data, cnx, key_list=["patientId","deviceId"]):
+def update_device_id_data(curr_data, cnx, key_list=["patientId","deviceId"]):
     try:
         status, data = validate_dict(curr_data, key_list)
     except:
