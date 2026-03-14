@@ -48,8 +48,6 @@ def update_device_id_data(curr_data, cnx, key_list=["patientId","deviceId"]):
     if not status:
         return jsonify({"status": "error", "message": "Invalid data"})
 
-    cursor = None
-
     try:
         patient_id, device_id = data
 
@@ -61,14 +59,16 @@ def update_device_id_data(curr_data, cnx, key_list=["patientId","deviceId"]):
             .where(patient.patientID == patient_id)
         )
 
-        cursor = cnx.cursor()
-        cursor.execute(str(query))
+        sql = str(query)
+
+        result = cnx.execute(sql)
         cnx.commit()
 
         resp_dict = {
             "status": "success",
             "message": "Device ID updated",
-            "patientId": patient_id
+            "patientId": patient_id,
+            "rowsAffected": result.rowcount
         }
 
     except Exception as e:
@@ -76,10 +76,6 @@ def update_device_id_data(curr_data, cnx, key_list=["patientId","deviceId"]):
             "status": "error",
             "message": str(e)
         }
-
-    finally:
-        if cursor:
-            cursor.close()
 
     return jsonify(resp_dict)
 
