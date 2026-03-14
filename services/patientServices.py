@@ -4,6 +4,7 @@ from pypika import Query, Table
 from datetime import datetime, timedelta
 from flask import jsonify, make_response
 import sqlalchemy
+from sqlalchemy import text
 
 def register_patient_data(curr_data,cnx,key_list = ["email","password"]):
     try:
@@ -39,46 +40,35 @@ def register_patient_data(curr_data,cnx,key_list = ["email","password"]):
 #        cursor.close()
         return jsonify(resp_dict)
     
-from sqlalchemy import text
-
-def update_device_id_data(curr_data, cnx, key_list=["patientId","deviceId"]):
-    try:
-        status, data = validate_dict(curr_data, key_list)
-    except:
-        return jsonify({"status": "error", "message": "Key Error!"})
-
-    if not status:
-        return jsonify({"status": "error", "message": "Invalid data"})
+def update_device_id_data(curr_data, cnx):
 
     try:
-        patient_id, device_id = data
+        patient_id = curr_data["patientId"]
+        device_id = curr_data["deviceId"]
 
-        patient = Table("patient")
+        sql = text("""
+        UPDATE patient
+        SET deviceId = :device_id
+        WHERE patientID = :patient_id
+        """)
 
-        query = (
-            Query.update(patient)
-            .set(patient.deviceId, device_id)
-            .where(patient.patientID == patient_id)
-        )
+        result = cnx.execute(sql, {
+            "device_id": device_id,
+            "patient_id": patient_id
+        })
 
-        sql = str(query)
-
-        result = cnx.execute(text(sql))
         cnx.commit()
 
-        resp_dict = {
+        return jsonify({
             "status": "success",
-            "message": "Device ID updated",
             "rowsAffected": result.rowcount
-        }
+        })
 
     except Exception as e:
-        resp_dict = {
+        return jsonify({
             "status": "error",
             "message": str(e)
-        }
-
-    return jsonify(resp_dict)
+        })
 
 def update_patient_data(curr_data,cnx,key_list=[]):
     try:
