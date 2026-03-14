@@ -48,6 +48,8 @@ def update_device_id_data(curr_data, cnx, key_list=["patientId","deviceId"]):
     if not status:
         return jsonify({"status": "error", "message": "Invalid data"})
 
+    cursor = None
+
     try:
         patient_id = data["patientId"]
         device_id = data["deviceId"]
@@ -77,7 +79,8 @@ def update_device_id_data(curr_data, cnx, key_list=["patientId","deviceId"]):
         }
 
     finally:
-        cursor.close()
+        if cursor:
+            cursor.close()
 
     return jsonify(resp_dict)
     
