@@ -51,8 +51,7 @@ def update_device_id_data(curr_data, cnx, key_list=["patientId","deviceId"]):
     cursor = None
 
     try:
-        patient_id = data["patientId"]
-        device_id = data["deviceId"]
+        patient_id, device_id = data
 
         patient = Table("patient")
 
@@ -83,7 +82,7 @@ def update_device_id_data(curr_data, cnx, key_list=["patientId","deviceId"]):
             cursor.close()
 
     return jsonify(resp_dict)
-    
+
 def update_patient_data(curr_data,cnx,key_list=[]):
     try:
         status,_ = validate_dict(curr_data,key_list)
