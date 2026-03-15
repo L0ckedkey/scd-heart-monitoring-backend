@@ -40,6 +40,21 @@ def register_patient_data(curr_data,cnx,key_list = ["email","password"]):
 #        cursor.close()
         return jsonify(resp_dict)
     
+def get_device_id(patient_id, cnx):
+
+    sql = """
+    SELECT deviceId
+    FROM patients
+    WHERE patientID = :pid
+    """
+
+    result = cnx.execute(sqlalchemy.text(sql), {"pid": patient_id}).fetchone()
+
+    if result:
+        return result[0]
+
+    return None
+    
 def update_device_id_data(curr_data, cnx):
 
     try:
@@ -58,15 +73,15 @@ def update_device_id_data(curr_data, cnx):
         })
 
         cnx.commit()
-
+        print(result)
         return jsonify({
-            "status": "success",
-            "rowsAffected": result.rowcount
+            "status": True,
+            "message": "updated"
         })
 
     except Exception as e:
         return jsonify({
-            "status": "error",
+            "status": False,
             "message": str(e)
         })
 
@@ -275,6 +290,7 @@ def get_patients_with_consultation(cnx):
     
 def schedule_consultation(curr_data, cnx):
     try:
+        
         data = curr_data
         consultation_id = data["consultationID"]
         if not consultation_id:
@@ -443,24 +459,49 @@ def set_consultation(curr_data, cnx, key_list=['patientID']):
             "message": str(e)
         }), 400
 
-    if status: 
+    if status:
         try:
+            get_pending_consul = """
+            SELECT patientId
+            FROM consultation 
+            WHERE status = 'pending' AND patientID = :pid
+            """
+
+        
+            print(data, flush=True)
+            patient_id = data[0]
+            consult_result = cnx.execute(
+                sqlalchemy.text(get_pending_consul),
+                {'pid': patient_id}
+            ).fetchone()
+
+            # kalau ada pending -> stop
+            if consult_result:
+                print("There is pending consul", flush=True)
+                return jsonify({
+                    "status": False,
+                    "message": "There is already a pending consultation"
+                }), 400
+
+            # insert consultation
             tgt_tab = Table('consultation')
             q = Query.into(tgt_tab).columns(tuple(key_list)).insert(tuple(data))
+
             cnx.execute(sqlalchemy.text(str(q).replace('"','`')))
             cnx.commit()
-            
-            resp_dict = {
+
+            return jsonify({
                 "status": True,
-                "message": "Consultation inserted successfully",
-            }
-            return jsonify(resp_dict)
+                "message": "Consultation inserted successfully"
+            })
+
         except Exception as e:
-            print(e)
+            print(e, flush=True)
             return jsonify({
                 "status": False,
                 "error": str(e)
             }), 500
+
     else:
         return jsonify({
             "status": False,

@@ -6,7 +6,13 @@ from datetime import datetime
 from sklearn.preprocessing import MinMaxScaler as mms
 from misc.utils import *
 import sqlalchemy
+import logging
 from scipy.stats import entropy
+from services.patientServices import get_device_id
+from services.fcmServices import send_fcm
+from flask import jsonify
+from datetime import datetime
+
 
 def load_model(selected_model):
     model_path = "models/{}/".format(selected_model)
@@ -99,6 +105,8 @@ def predict(samples,model_id=1):
             "src_created_at" : s["created_at"],
             "prc_dt" : datetime.now().strftime("%Y-%m-%d %X")
         })
+    
+    # print("Pred Res : ", desc, flush=True)
 
     return FINAL_RESULT
 
@@ -121,7 +129,22 @@ def save_prediction_results(data,cnx):
         status,_ = validate_dict(data[0],key_list)
     except:
         return "Key Error!"
-    if status: 
+    if status:
+        # logging.info("Data : ", data['prediction_desc'])
+        print("Data : ", data, flush=True)
+        for d in data:
+            print("Index : ", d, flush=True)
+            if d["prediction_label"] == 0:
+                print("Index Found!", flush=True)
+                device_id = get_device_id(d["patientId"], cnx)
+                print("Device Id : ",device_id, flush=True)
+                if device_id:
+
+                    send_fcm(
+                        device_id,
+                        "⚠️ Arrhythmia Alert",
+                        "Malignant Ventricular Ectopy detected"
+                    )
         column_list = ['patientId','feature_store','model_id','model_prediction','exc_time_sec','data_snapshot_dt','prc_dt']
         tgt_tab = Table('model_results')
         q = Query.into(tgt_tab).columns(tuple(column_list)).insert(map_pred_results_to_tuple(data))
@@ -132,4 +155,37 @@ def save_prediction_results(data,cnx):
         cnx.commit()
 
 #        cursor.close()
+
+def trigger_notification(data, cnx, key_list=['patientID']):
+    print(data, flush=True)
+    try:
+        status, data = validate_dict(data, key_list)
+    except Exception as e:
+        return jsonify({
+            "status": False,
+            "error": "Key Error!",
+            "message": str(e)
+        }), 400
+    
+    if status:
+        try:   
+            from services.ecgServices import insert_ecg
+            
+            curr_data = {
+                'patientId': data[0],
+                'rr': "[639, 650, 639, 650, 639, 650, 639, 650, 639, 650, 644, 643, 644, 643, 644, 643, 644, 643, 644, 643, 332, 293, 332, 293, 332, 293, 332, 293, 332, 293, 635, 635, 635, 635, 635, 644, 659, 644, 659, 644, 659, 644, 659, 644, 659, 643, 643, 643, 643, 643, 647, 659, 647, 659, 647, 659, 647, 659, 647, 659, 685, 685, 685, 685, 685]",
+                'startTime': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            insert_ecg(curr_data=curr_data, cnx=cnx)
+            return jsonify({
+                "status": True,
+                "message": "Trigger notif success"
+            })
+
+        except Exception as e:
+            print(e, flush=True)
+            return jsonify({
+                "status": False,
+                "error": str(e)
+            }), 500
 

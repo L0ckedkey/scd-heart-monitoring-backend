@@ -148,8 +148,6 @@ def assign_schedule():
     curr_data = request.get_json()
     return med_assign_schedule(curr_data, g.db_conn)
 
-
-
 @api_bp.route('/patient/<patientId>/medicine/<medicineId>', methods=['GET'])
 def get_a_medicine(patientId, medicineId):
     return get_medicine(patientId, medicineId, g.db_conn)
@@ -181,6 +179,10 @@ def get_history(userId):
 @api_bp.route('/predict', methods=['POST'])
 def get_predictions():
     return make_predictions(request.get_json(), g.db_conn)
+
+@api_bp.route('/trigger', methods=['POST'])
+def trigger_notif():
+    return trigger_notification(request.get_json(), g.db_conn)
 
 @api_bp.route('/consultation', methods=['POST'])
 def set_consul():
